@@ -20,7 +20,7 @@ fn main() -> io::Result<()> {
     }
     for handle in handles {
         match handle.join() {
-            Ok(result) => result,
+            Ok(()) => println!("Folder Completed!"),
             Err(e) => eprintln!("Thread failed: {:?}", e),
         }
     }
