@@ -1,15 +1,31 @@
-use std::fs;
+use std::{ fs, io::{ self }, thread };
 use serde::Serialize;
 use regex::Regex;
 
-fn main() {
-    let paths = fs
-        ::read_dir("S:\\Projects\\Coding\\Test\\SaveTrendsFromDestruction\\LYN\\1748459525")
-        .unwrap();
+fn main() -> io::Result<()> {
+    println!("Enter path for units to convert XML to CSV");
 
+    let mut buffer = String::new();
+    io::stdin().read_line(&mut buffer)?;
+    println!("{:?}", buffer.trim());
+
+    let paths = fs::read_dir(buffer.trim()).unwrap();
+    let mut handles = vec![];
     for path in paths {
-        find_children(path.unwrap().path().display().to_string());
+        let handle = thread::spawn(move || {
+            find_children(path.unwrap().path().display().to_string());
+        });
+
+        handles.push(handle);
     }
+    for handle in handles {
+        match handle.join() {
+            Ok(result) => result,
+            Err(e) => eprintln!("Thread failed: {:?}", e),
+        }
+    }
+
+    Ok(())
 }
 
 fn find_children(path: String) {
@@ -63,5 +79,4 @@ fn convert_xml_to_csv(path: String) {
         csv_data.push_str(&format!("{},{}\n", r.time, r.value));
     }
     let _ = fs::write(&data, &csv_data);
-    // println!("{}", csv_data);
 }
